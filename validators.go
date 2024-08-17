@@ -24,11 +24,11 @@ import (
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
 
-func loadValidatorKeys(spec *common.Spec, mnemonicsConfigPath string, validatorsListPath string, tranchesDir string, ethWithdrawalAddress common.Eth1Address) ([]phase0.KickstartValidatorData, error) {
+func loadValidatorKeys(spec *common.Spec, mnemonicsConfigPath string, validatorsListPath string, tranchesDir string, ethWithdrawalAddress common.Eth1Address, effectiveBalance common.Gwei) ([]phase0.KickstartValidatorData, error) {
 	validators := []phase0.KickstartValidatorData{}
 
 	if mnemonicsConfigPath != "" {
-		val, err := generateValidatorKeysByMnemonic(spec, mnemonicsConfigPath, tranchesDir, ethWithdrawalAddress)
+		val, err := generateValidatorKeysByMnemonic(spec, mnemonicsConfigPath, tranchesDir, ethWithdrawalAddress, effectiveBalance)
 		if err != nil {
 			fmt.Printf("error loading validators from mnemonic yaml (%s): %s\n", mnemonicsConfigPath, err)
 		} else {
@@ -38,7 +38,7 @@ func loadValidatorKeys(spec *common.Spec, mnemonicsConfigPath string, validators
 	}
 
 	if validatorsListPath != "" {
-		val, err := loadValidatorsFromFile(spec, validatorsListPath)
+		val, err := loadValidatorsFromFile(spec, validatorsListPath, effectiveBalance)
 		if err != nil {
 			fmt.Printf("error loading validators from validators list (%s): %s\n", validatorsListPath, err)
 		} else {
@@ -50,7 +50,7 @@ func loadValidatorKeys(spec *common.Spec, mnemonicsConfigPath string, validators
 	return validators, nil
 }
 
-func generateValidatorKeysByMnemonic(spec *common.Spec, mnemonicsConfigPath string, tranchesDir string, ethWithdrawalAddress common.Eth1Address) ([]phase0.KickstartValidatorData, error) {
+func generateValidatorKeysByMnemonic(spec *common.Spec, mnemonicsConfigPath string, tranchesDir string, ethWithdrawalAddress common.Eth1Address, effectiveBalance common.Gwei) ([]phase0.KickstartValidatorData, error) {
 	mnemonics, err := loadMnemonics(mnemonicsConfigPath)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,11 @@ func generateValidatorKeysByMnemonic(spec *common.Spec, mnemonicsConfigPath stri
 				}
 
 				// Max effective balance by default for activation
-				data.Balance = spec.MAX_EFFECTIVE_BALANCE
+				if effectiveBalance > 0 {
+					data.Balance = effectiveBalance
+				} else {
+					data.Balance = spec.MAX_EFFECTIVE_BALANCE
+				}
 				validators[valIndex] = data
 				count := atomic.AddInt32(&prog, 1)
 				if count%100 == 0 {
@@ -200,7 +204,7 @@ func loadMnemonics(srcPath string) ([]MnemonicSrc, error) {
 	return data, nil
 }
 
-func loadValidatorsFromFile(spec *common.Spec, validatorsConfigPath string) ([]phase0.KickstartValidatorData, error) {
+func loadValidatorsFromFile(spec *common.Spec, validatorsConfigPath string, effectiveBalance common.Gwei) ([]phase0.KickstartValidatorData, error) {
 	validatorsFile, err := os.Open(validatorsConfigPath)
 	if err != nil {
 		return nil, err
@@ -266,7 +270,11 @@ func loadValidatorsFromFile(spec *common.Spec, validatorsConfigPath string) ([]p
 			}
 			validatorEntry.Balance = common.Gwei(balance)
 		} else {
-			validatorEntry.Balance = spec.MAX_EFFECTIVE_BALANCE
+			if effectiveBalance > 0 {
+				validatorEntry.Balance = effectiveBalance
+			} else {
+				validatorEntry.Balance = spec.MAX_EFFECTIVE_BALANCE
+			}
 		}
 
 		validators = append(validators, validatorEntry)

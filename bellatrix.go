@@ -36,6 +36,7 @@ type BellatrixGenesisCmd struct {
 
 	EthWithdrawalAddress common.Eth1Address `ask:"--eth1-withdrawal-address" help:"Eth1 Withdrawal to set for the genesis validator set"`
 	ShadowForkEth1RPC    string             `ask:"--shadow-fork-eth1-rpc" help:"Fetch the Eth1 block from the eth1 node for the shadow fork"`
+	EffectiveBalance     common.Gwei        `ask:"--max-effective-balance" help:"Set effective balance to be custom instead of default"`
 }
 
 func (g *BellatrixGenesisCmd) Help() string {
@@ -54,6 +55,7 @@ func (g *BellatrixGenesisCmd) Default() {
 	g.StateOutputPath = "genesis.ssz"
 	g.TranchesDir = "tranches"
 	g.ShadowForkEth1RPC = ""
+	g.EffectiveBalance = 0
 }
 
 func (g *BellatrixGenesisCmd) Run(ctx context.Context, args ...string) error {
@@ -159,7 +161,7 @@ func (g *BellatrixGenesisCmd) Run(ctx context.Context, args ...string) error {
 		return err
 	}
 
-	validators, err := loadValidatorKeys(spec, g.MnemonicsSrcFilePath, g.ValidatorsSrcFilePath, g.TranchesDir, g.EthWithdrawalAddress)
+	validators, err := loadValidatorKeys(spec, g.MnemonicsSrcFilePath, g.ValidatorsSrcFilePath, g.TranchesDir, g.EthWithdrawalAddress, g.EffectiveBalance)
 	if err != nil {
 		return err
 	}
@@ -169,7 +171,7 @@ func (g *BellatrixGenesisCmd) Run(ctx context.Context, args ...string) error {
 	}
 
 	state := bellatrix.NewBeaconStateView(spec)
-	if err := setupState(spec, state, beaconGenesisTimestamp, eth1BlockHash, validators); err != nil {
+	if err := setupState(spec, state, beaconGenesisTimestamp, eth1BlockHash, validators, g.EffectiveBalance); err != nil {
 		return err
 	}
 

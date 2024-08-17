@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
 	"github.com/protolambda/zrnt/eth2/beacon/capella"
@@ -12,7 +13,7 @@ import (
 )
 
 func setupState(spec *common.Spec, state common.BeaconState, eth1Time common.Timestamp,
-	eth1BlockHash common.Root, validators []phase0.KickstartValidatorData) error {
+	eth1BlockHash common.Root, validators []phase0.KickstartValidatorData, effectiveBalance common.Gwei) error {
 
 	if err := state.SetGenesisTime(eth1Time + spec.GENESIS_DELAY); err != nil {
 		return err
@@ -104,7 +105,12 @@ func setupState(spec *common.Spec, state common.BeaconState, eth1Time common.Tim
 		if err != nil {
 			return err
 		}
-		if vEff == spec.MAX_EFFECTIVE_BALANCE {
+
+		maxEffectiveBalance := spec.MAX_EFFECTIVE_BALANCE
+		if effectiveBalance > 0 {
+			maxEffectiveBalance = effectiveBalance
+		}
+		if vEff == maxEffectiveBalance {
 			if err := val.SetActivationEligibilityEpoch(common.GENESIS_EPOCH); err != nil {
 				return err
 			}
