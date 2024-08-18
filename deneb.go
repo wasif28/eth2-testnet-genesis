@@ -67,6 +67,7 @@ func (g *DenebGenesisCmd) Default() {
 
 func (g *DenebGenesisCmd) Run(ctx context.Context, args ...string) error {
 	fmt.Printf("zrnt version: %s\n", eth2.VERSION)
+	fmt.Printf("effectivebalance %s\n", g.EffectiveBalance)
 
 	spec, err := g.SpecOptions.Spec()
 	if err != nil {
