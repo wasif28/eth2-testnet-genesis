@@ -24,7 +24,7 @@ type AltairGenesisCmd struct {
 	TranchesDir           string           `ask:"--tranches-dir" help:"Directory to dump lists of pubkeys of each tranche in"`
 
 	EthWithdrawalAddress common.Eth1Address `ask:"--eth1-withdrawal-address" help:"Eth1 Withdrawal to set for the genesis validator set"`
-	EffectiveBalance     common.Gwei        `ask:"--max-effective-balance" help:"Set effective balance to be custom instead of default"`
+	EffectiveBalance     uint64             `ask:"--max-effective-balance" help:"Set effective balance to be custom instead of default"`
 }
 
 func (g *AltairGenesisCmd) Help() string {
@@ -53,7 +53,7 @@ func (g *AltairGenesisCmd) Run(ctx context.Context, args ...string) error {
 		return err
 	}
 
-	validators, err := loadValidatorKeys(spec, g.MnemonicsSrcFilePath, g.ValidatorsSrcFilePath, g.TranchesDir, g.EthWithdrawalAddress, g.EffectiveBalance)
+	validators, err := loadValidatorKeys(spec, g.MnemonicsSrcFilePath, g.ValidatorsSrcFilePath, g.TranchesDir, g.EthWithdrawalAddress, common.Gwei(g.EffectiveBalance))
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (g *AltairGenesisCmd) Run(ctx context.Context, args ...string) error {
 	}
 
 	state := altair.NewBeaconStateView(spec)
-	if err := setupState(spec, state, g.Eth1BlockTimestamp, g.Eth1BlockHash, validators, g.EffectiveBalance); err != nil {
+	if err := setupState(spec, state, g.Eth1BlockTimestamp, g.Eth1BlockHash, validators, common.Gwei(g.EffectiveBalance)); err != nil {
 		return err
 	}
 

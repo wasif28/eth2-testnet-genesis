@@ -128,7 +128,7 @@ func generateValidatorKeysByMnemonic(spec *common.Spec, mnemonicsConfigPath stri
 				}
 
 				// Max effective balance by default for activation
-				if effectiveBalance > 0 {
+				if uint64(effectiveBalance) > 0 {
 					data.Balance = effectiveBalance
 				} else {
 					data.Balance = spec.MAX_EFFECTIVE_BALANCE
@@ -270,7 +270,7 @@ func loadValidatorsFromFile(spec *common.Spec, validatorsConfigPath string, effe
 			}
 			validatorEntry.Balance = common.Gwei(balance)
 		} else {
-			if effectiveBalance > 0 {
+			if uint64(effectiveBalance) > 0 {
 				validatorEntry.Balance = effectiveBalance
 			} else {
 				validatorEntry.Balance = spec.MAX_EFFECTIVE_BALANCE
