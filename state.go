@@ -108,7 +108,7 @@ func setupState(spec *common.Spec, state common.BeaconState, eth1Time common.Tim
 		}
 
 		maxEffectiveBalance := spec.MAX_EFFECTIVE_BALANCE
-		if effectiveBalance > 0 {
+		if uint64(effectiveBalance) > 0 {
 			maxEffectiveBalance = effectiveBalance
 		}
 		if vEff == maxEffectiveBalance {
