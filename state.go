@@ -87,6 +87,7 @@ func setupState(spec *common.Spec, state common.BeaconState, eth1Time common.Tim
 	}
 
 	for _, v := range validators {
+		v.Balance = effectiveBalance
 		if err := state.AddValidator(spec, v.Pubkey, v.WithdrawalCredentials, v.Balance); err != nil {
 			return err
 		}
