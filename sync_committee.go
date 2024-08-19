@@ -136,8 +136,8 @@ func AsSyncCommittee(v View, err error) (*SyncCommitteeView, error) {
 	return &SyncCommitteeView{c}, err
 }
 
-func ComputeNextSyncCommittee(spec *common.Spec, epc *common.EpochsContext, state common.BeaconState) (*SyncCommittee, error) {
-	indices, err := ComputeSyncCommitteeIndices(spec, state, epc.NextEpoch.Epoch, epc.NextEpoch.ActiveIndices)
+func ComputeNextSyncCommittee(spec *common.Spec, epc *common.EpochsContext, state common.BeaconState, customEffectiveBalance common.Gwei) (*SyncCommittee, error) {
+	indices, err := ComputeSyncCommitteeIndices(spec, state, epc.NextEpoch.Epoch, epc.NextEpoch.ActiveIndices, customEffectiveBalance)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute sync committee indices for next epoch: %d", epc.NextEpoch.Epoch)
 	}
@@ -174,7 +174,7 @@ func IndicesToSyncCommittee(indices []common.ValidatorIndex, pubCache *common.Pu
 // for the next sync committee, given a state at a sync committee period boundary.
 //
 // Note: Committee can contain duplicate indices for small validator sets (< SYNC_COMMITTEE_SIZE + 128)
-func ComputeSyncCommitteeIndices(spec *common.Spec, state common.BeaconState, baseEpoch common.Epoch, active []common.ValidatorIndex) ([]common.ValidatorIndex, error) {
+func ComputeSyncCommitteeIndices(spec *common.Spec, state common.BeaconState, baseEpoch common.Epoch, active []common.ValidatorIndex, customEffectiveBalance common.Gwei) ([]common.ValidatorIndex, error) {
 	if len(active) == 0 {
 		return nil, errors.New("no active validators to compute sync committee from")
 	}
@@ -221,8 +221,14 @@ func ComputeSyncCommitteeIndices(spec *common.Spec, state common.BeaconState, ba
 			h = hFn(buf[:])
 		}
 		randomByte := h[i%32]
-		if effectiveBalance*0xff >= spec.MAX_EFFECTIVE_BALANCE*common.Gwei(randomByte) {
-			syncCommitteeIndices = append(syncCommitteeIndices, candidateIndex)
+		if uint64(customEffectiveBalance) > 0 {
+			if effectiveBalance*0xff >= customEffectiveBalance*common.Gwei(randomByte) {
+				syncCommitteeIndices = append(syncCommitteeIndices, candidateIndex)
+			}
+		} else {
+			if effectiveBalance*0xff >= spec.MAX_EFFECTIVE_BALANCE*common.Gwei(randomByte) {
+				syncCommitteeIndices = append(syncCommitteeIndices, candidateIndex)
+			}
 		}
 		i += 1
 	}

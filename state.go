@@ -132,7 +132,7 @@ func setupState(spec *common.Spec, state common.BeaconState, eth1Time common.Tim
 			return err
 		}
 		active := common.ActiveIndices(indicesBounded, common.GENESIS_EPOCH)
-		indices, err := ComputeSyncCommitteeIndices(spec, state, common.GENESIS_EPOCH, active)
+		indices, err := ComputeSyncCommitteeIndices(spec, state, common.GENESIS_EPOCH, active, effectiveBalance)
 		if err != nil {
 			return fmt.Errorf("failed to compute sync committee indices: %v", err)
 		}
