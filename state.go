@@ -102,6 +102,9 @@ func setupState(spec *common.Spec, state common.BeaconState, eth1Time common.Tim
 		if err != nil {
 			return err
 		}
+		if uint64(effectiveBalance) > 0 {
+			val.SetEffectiveBalance(effectiveBalance)
+		}
 		vEff, err := val.EffectiveBalance()
 		if err != nil {
 			return err
